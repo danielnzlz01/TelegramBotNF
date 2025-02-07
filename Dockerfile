@@ -12,4 +12,4 @@ COPY . .
 
 # Expose FastAPI and run app
 EXPOSE 8000
-CMD ["uvicorn", "telegrambot:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/bin/sh", "-c", "python telegrambot.py & uvicorn telegrambot:app --host 0.0.0.0 --port 8000"]

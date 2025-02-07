@@ -17,6 +17,8 @@ from pydantic import BaseModel
 from telegram import Update, Bot
 from telegram.ext import Updater, CommandHandler, CallbackContext
 
+# print(tf.config.list_physical_devices('GPU'))
+
 # Environment variables
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 WILDBERRIES_API_KEY = os.getenv("WILDBERRIES_API_KEY")
@@ -37,28 +39,29 @@ def create_bnn(input_dim):
     outputs = bayesian_dense(1, activation="sigmoid")(x)
     return tf.keras.Model(inputs, outputs)
 
-model = create_bnn(input_dim=10)
-
 def custom_loss(y_true, y_pred, kl_divergence, weight=1e-3):
     mse = tf.keras.losses.mean_squared_error(y_true, y_pred)
     kl_penalty = weight * kl_divergence
     return mse + kl_penalty
 
-model.compile(
-    optimizer=tf.keras.optimizers.Adam(),
-    loss=lambda y_true, y_pred: custom_loss(y_true, y_pred, model.losses[0])
-)
-
 # Wildberries API data fetching
-def fetch_wb_data(api_key, date_from, date_to):
-    url = "https://suppliers-api.wildberries.ru/api/v1/sales"
-    headers = {"Authorization": api_key}
-    params = {"dateFrom": date_from, "dateTo": date_to, "limit": 1000}
-    response = requests.get(url, headers=headers, params=params)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise Exception(f"API error: {response.status_code} - {response.text}")
+# def fetch_wb_data(api_key, date_from, date_to):
+#     url = "https://suppliers-api.wildberries.ru/api/v1/sales"
+#     headers = {"Authorization": api_key}
+#     params = {"dateFrom": date_from, "dateTo": date_to, "limit": 1000}
+#     response = requests.get(url, headers=headers, params=params)
+#     if response.status_code == 200:
+#         return response.json()
+#     else:
+#         raise Exception(f"API error: {response.status_code} - {response.text}")
+
+def fetch_synthetic_wb_data():
+    # This function returns sample data
+    return [
+        {"date": "2023-01-01", "sales": 10, "costs": 100, "revenue": 150, "returns": 2},
+        {"date": "2023-01-02", "sales": 15, "costs": 120, "revenue": 180, "returns": 3},
+        {"date": "2023-01-03", "sales": 8,  "costs":  80, "revenue": 110, "returns": 1},
+    ]
 
 # Data cleaning and transformation
 def remove_outliers(dataframe, column):
@@ -172,6 +175,8 @@ def main():
     updater = Updater(TELEGRAM_TOKEN)
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("calculate", calculate))
+    model = create_bnn(input_dim=10)
+    model.build(input_shape=(None, 10))
     updater.start_polling()
     updater.idle()
 
