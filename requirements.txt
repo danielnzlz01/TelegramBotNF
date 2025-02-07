@@ -1,0 +1,13 @@
+tensorflow
+torch
+pyro-ppl
+fastapi
+uvicorn
+requests
+pydantic
+pandas
+numpy
+scikit-learn
+python-telegram-bot
+python-dotenv
+tensorflow-probability[tf]
